@@ -22,3 +22,31 @@ async function connectToDatabase(){
     }
 }
 connectToDatabase();
+
+//Lesson Routes
+app.get('/api/lessons', async (req, res) => {
+    try{
+        const lessons = await db.collection('lessons').find({}).toArray();
+        res.json(lessons);
+    }catch(error){
+        res.status(500).json({message:error.message});
+    }
+});
+
+app.patch('/api/lessons/:id', async (req, res) => {
+    try{
+        const result = await db.collection('lessons').updateOne(
+            {_id: new ObjectId(req.params.id)},
+            { $set: {spaces: req.body.spaces}}
+        );
+        if (result.matchedCount === 0){
+            return res.status(404).json({message: "Lesson not found"});
+        }
+        const updatedLesson = await db.collection('lessons').findOne(
+            {_id: new ObjectId(req.params.id) }
+        );
+        res.json(updatedLesson);
+    } catch(error) {
+        res.status(400).json({message: error.message});
+    }
+});
