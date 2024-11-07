@@ -50,3 +50,39 @@ app.patch('/api/lessons/:id', async (req, res) => {
         res.status(400).json({message: error.message});
     }
 });
+
+//Order Routes
+app.post('/api/orders', async (req, res) => {
+    try {
+        const order = {
+            name: req.body.name,
+            phoneNumber: req.body.phoneNumber,
+            lessonIds: req.body.lessonIds.map(id => new ObjectId(id)),
+            spaces: req.body.spaces,
+            orderDate: new Date()
+        };
+
+        const result = await db.collection('orders').insertOne(order);
+        res.status(201).json({ ...order, _id: result.insertedId });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+app.get('/api/orders', async (req, res) => {
+    try {
+        const orders = await db.collection('orders').aggregate([
+            {
+                $lookup: {
+                    from: 'lessons',
+                    localField: 'lessonIds',
+                    foreignField: '_id',
+                    as: 'lessons'
+                }
+            }
+        ]).toArray();
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
