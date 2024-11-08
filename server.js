@@ -46,7 +46,12 @@ app.use('/images', (req, res, next) => {
         }
         next()
     })
-})
+});
+
+//Serve static files from 'images' directory
+app.use('/images', express.static(path.join(__dirname, '/images')));
+
+
 //Mongodb Connection
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
