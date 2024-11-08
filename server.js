@@ -31,6 +31,22 @@ app.use((req, res, next) => {
     });
     next();
 });
+
+//Static Files Middleware - Check if image exists
+app.use('/images', (req, res, next) => {
+    const imagePath = path.join(__dirname, 'public/images, req.path');
+
+    fs.access(imagePath, fs.constants.F_OK, (err) => {
+        if (err) {
+            console.log(`[${new Date().toISOString()}] Image not found:${req.path}`);
+            return res.status(404).json({
+                message: 'Image not Found',
+                requestedPath: req.path
+            });
+        }
+        next()
+    })
+})
 //Mongodb Connection
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
