@@ -132,6 +132,10 @@ app.get('/api/orders', async (req, res) => {
     }
 });
 
+//Test route for images
+app.get('/test-image/:imageName', (req,res) => {
+    res.redirect(`/images/${req.params.imageName}`);
+});
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
