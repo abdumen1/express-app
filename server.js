@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 
 //Static Files Middleware - Check if image exists
 app.use('/images', (req, res, next) => {
-    const imagePath = path.join(__dirname, 'public/images, req.path');
+    const imagePath = path.join(__dirname, 'public/images', req.path);
 
     fs.access(imagePath, fs.constants.F_OK, (err) => {
         if (err) {
@@ -49,7 +49,7 @@ app.use('/images', (req, res, next) => {
 });
 
 //Serve static files from 'images' directory
-app.use('/images', express.static(path.join(__dirname, '/images')));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 
 //Mongodb Connection
@@ -142,7 +142,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Graceful shutdown
+// shutdown
 process.on('SIGINT', async () => {
     try {
         await client.close();
