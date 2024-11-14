@@ -9,7 +9,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-//Logger Middleware
+
 app.use((req, res, next) => {
     const timestamp = new Date().toISOString();
     const method = req.method;
@@ -78,17 +78,17 @@ app.get('/api/lessons', async (req, res) => {
     }
 });
 
-app.patch('/api/lessons/:id', async (req, res) => {
+app.put('/api/lessons/:id', async (req, res) => {
     try{
         const result = await db.collection('lessons').updateOne(
             {_id: new ObjectId(req.params.id)},
-            { $set: {spaces: req.body.spaces}}
+            {$set:req.body} // This allows updating any attribute
         );
         if (result.matchedCount === 0){
-            return res.status(404).json({message: "Lesson not found"});
+            return res.status(404).json({message : "Lesson not found"});
         }
         const updatedLesson = await db.collection('lessons').findOne(
-            {_id: new ObjectId(req.params.id) }
+            {_id: new ObjectId(req.params.id)}
         );
         res.json(updatedLesson);
     } catch(error) {
