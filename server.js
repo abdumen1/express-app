@@ -79,20 +79,33 @@ app.get('/api/lessons', async (req, res) => {
 });
 
 app.put('/api/lessons/:id', async (req, res) => {
-    try{
-        const result = await db.collection('lessons').updateOne(
-            {_id: new ObjectId(req.params.id)},
-            {$set:req.body} // This allows updating any attribute
-        );
-        if (result.matchedCount === 0){
-            return res.status(404).json({message : "Lesson not found"});
+    try {
+        const lessonId = req.params.id;
+
+        // Validate ID format
+        if (!ObjectId.isValid(lessonId)) {
+            return res.status(400).json({ message: "Invalid ID format" });
         }
-        const updatedLesson = await db.collection('lessons').findOne(
-            {_id: new ObjectId(req.params.id)}
+
+        // Update the document
+        const result = await db.collection('lessons').updateOne(
+            { _id: new ObjectId(lessonId) },
+            { $set: req.body } // Update any provided fields
         );
-        res.json(updatedLesson);
-    } catch(error) {
-        res.status(400).json({message: error.message});
+
+        // Check if the document exists
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: "Lesson not found" });
+        }
+
+        // Fetch and return the updated document
+        const updatedLesson = await db.collection('lessons').findOne(
+            { _id: new ObjectId(lessonId) }
+        );
+
+        res.status(200).json(updatedLesson);
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });
 
@@ -128,6 +141,37 @@ app.get('/api/orders', async (req, res) => {
         ]).toArray();
         res.json(orders);
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.delete('/api/orders/:id', async (req, res) => {
+    try {
+        // First, get the order details before deleting
+        const order = await db.collection('orders').findOne({
+            _id: new ObjectId(req.params.id)
+        });
+
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+
+        // For each lesson in the order, increment the spaces
+        for (const lessonId of order.lessonIds) {
+            await db.collection('lessons').updateOne(
+                { _id: lessonId },
+                { $inc: { spaces: 1 } } // Increment spaces by 1
+            );
+        }
+
+        // Delete the order
+        const result = await db.collection('orders').deleteOne({
+            _id: new ObjectId(req.params.id)
+        });
+
+        res.json({ message: "Order deleted and lesson spaces updated" });
+    } catch (error) {
+        console.error('Error deleting order:', error);
         res.status(500).json({ message: error.message });
     }
 });
